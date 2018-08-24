@@ -1,0 +1,79 @@
+version: "3.4"
+
+services:
+      
+  timesheet:
+    build:
+      context: timesheet
+      target: dev
+    depends_on:
+      - timesheet_db
+    volumes:
+      - timesheet_dist:/app/dist
+    restart: always
+    ports:
+      - "9222:9222"
+    labels:
+      - "traefik.enable=true"   
+      - "traefik.backend=timesheet"
+      - "traefik.port=3000"
+      - "traefik.frontend.entryPoints=http"
+
+  timesheet_db:
+    image: postgres:11-alpine
+    volumes:
+      - timesheet_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=timesheets
+      - POSTGRES_PASSWORD=_pePK7D*-R&HusDc
+    logging:
+      driver: none
+      
+  timesheet_builder:
+    build:
+      context: timesheet
+      target: builder
+    volumes:
+      - timesheet_dist:/app/dist
+      - ./timesheet/src:/app/src
+      
+  user:
+    build:
+      context: user
+      target: dev
+    command: main.go
+    volumes:
+      - ./user:/app
+    restart: on-failure
+    labels:
+      - "traefik.enable=true"   
+      - "traefik.backend=user"
+      - "traefik.port=3100"
+      - "traefik.frontend.entryPoints=http"
+
+  user_db:
+    image: postgres:11-alpine
+    environment:
+      - POSTGRES_DB=users
+      - POSTGRES_PASSWORD=T8B-^Rf6wFux*7ns
+
+  traefik:
+    image: traefik
+    command: --web --docker --docker.domain=docker.localhost --logLevel=INFO --docker.exposedbydefault=false
+    ports:
+      - "3000:80"
+      - "3001:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /dev/null:/traefik.toml
+    logging:
+      driver: none
+
+volumes:
+  timesheet_dist:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: $PWD/timesheet/dist
+  timesheet_data: {}

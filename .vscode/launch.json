@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Attach to Timesheet Service",
+            "port": 9222,
+            "restart": true,
+            "localRoot": "${workspaceFolder}/timesheet/dist",
+            "remoteRoot": "/app/dist",
+            "outFiles": [
+                "${workspaceFolder}/timesheet/dist/**/*.js"
+            ]
+        }
+    ]
+}
